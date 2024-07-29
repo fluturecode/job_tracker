@@ -1,11 +1,12 @@
+import os
+import pandas as pd
 import tkinter as tk
 from tkinter import ttk, messagebox
-import pandas as pd
-import os
+from tkcalendar import DateEntry
 
 # Initialize the CSV file
 file_name = 'job_applications.csv'
-if not os.path.isfile(file_name):
+if not os.path.isfile(file_name) or os.stat(file_name).st_size == 0:
     df = pd.DataFrame(columns=['Date', 'Company', 'Position', 'Status', 'Category', 'Followed Up', 'Company Website'])
     df.to_csv(file_name, index=False)
 
@@ -24,9 +25,9 @@ class JobTrackerApp:
         self.frame = ttk.Frame(self.root)
         self.frame.pack(padx=10, pady=10, fill='x', expand=True)
 
-        self.date_label = ttk.Label(self.frame, text="Date (YYYY-MM-DD):")
+        self.date_label = ttk.Label(self.frame, text="Date:")
         self.date_label.grid(row=0, column=0, padx=5, pady=5)
-        self.date_entry = ttk.Entry(self.frame)
+        self.date_entry = DateEntry(self.frame, date_pattern='yyyy-mm-dd')
         self.date_entry.grid(row=0, column=1, padx=5, pady=5)
 
         self.company_label = ttk.Label(self.frame, text="Company:")
@@ -50,9 +51,9 @@ class JobTrackerApp:
         self.category_menu = ttk.OptionMenu(self.frame, self.category_var, "Tech", "Tech", "Blockchain", "AI")
         self.category_menu.grid(row=4, column=1, padx=5, pady=5)
 
-        self.followup_label = ttk.Label(self.frame, text="Follow-Up Date (YYYY-MM-DD):")
+        self.followup_label = ttk.Label(self.frame, text="Follow-Up Date (optional):")
         self.followup_label.grid(row=5, column=0, padx=5, pady=5)
-        self.followup_entry = ttk.Entry(self.frame)
+        self.followup_entry = DateEntry(self.frame, date_pattern='yyyy-mm-dd')
         self.followup_entry.grid(row=5, column=1, padx=5, pady=5)
 
         self.website_label = ttk.Label(self.frame, text="Company Website:")
@@ -85,7 +86,8 @@ class JobTrackerApp:
         followup = self.followup_entry.get()
         website = self.website_entry.get()
 
-        if date and company and position and status and category and followup and website:
+        if date and company and position and status and category and website:
+            followup = followup if followup else "N/A"
             new_data = pd.DataFrame([[date, company, position, status, category, followup, website]], 
                                     columns=['Date', 'Company', 'Position', 'Status', 'Category', 'Followed Up', 'Company Website'])
             new_data.to_csv(file_name, mode='a', header=False, index=False)
@@ -93,15 +95,15 @@ class JobTrackerApp:
             self.clear_entries()
             messagebox.showinfo("Success", "Job application added successfully!")
         else:
-            messagebox.showwarning("Warning", "Please fill in all fields")
+            messagebox.showwarning("Warning", "Please fill in all fields except Follow-Up Date")
 
     def clear_entries(self):
-        self.date_entry.delete(0, tk.END)
+        self.date_entry.set_date('')
         self.company_entry.delete(0, tk.END)
         self.position_entry.delete(0, tk.END)
         self.status_entry.delete(0, tk.END)
         self.category_var.set("Tech")
-        self.followup_entry.delete(0, tk.END)
+        self.followup_entry.set_date('')
         self.website_entry.delete(0, tk.END)
 
     def load_applications(self):
@@ -122,22 +124,32 @@ class JobTrackerApp:
             self.switch_button.config(text="Switch to Dark Mode")
 
     def set_theme(self, theme):
-        if theme == 'light':
-            self.style.configure('.', background='white', foreground='black', fieldbackground='white')
-            self.style.configure('TLabel', background='white', foreground='black')
-            self.style.configure('TEntry', background='white', foreground='black')
-            self.style.configure('TButton', background='white', foreground='black')
-            self.style.configure('TOptionMenu', background='white', foreground='black')
-            self.style.configure('Treeview', background='white', foreground='black', fieldbackground='white')
-            self.style.map('Treeview', background=[('selected', 'gray')], foreground=[('selected', 'white')])
-        else:
-            self.style.configure('.', background='black', foreground='white', fieldbackground='black')
-            self.style.configure('TLabel', background='black', foreground='white')
-            self.style.configure('TEntry', background='black', foreground='white')
-            self.style.configure('TButton', background='black', foreground='white')
-            self.style.configure('TOptionMenu', background='black', foreground='white')
-            self.style.configure('Treeview', background='black', foreground='white', fieldbackground='black')
-            self.style.map('Treeview', background=[('selected', 'dark gray')], foreground=[('selected', 'white')])
+        theme_styles = {
+            'light': {
+                'background': '#f0f0f0',
+                'foreground': 'black',
+                'fieldbackground': '#f0f0f0',
+                'selected_bg': 'gray',
+                'selected_fg': 'white'
+            },
+            'dark': {
+                'background': 'black',
+                'foreground': 'white',
+                'fieldbackground': 'black',
+                'selected_bg': 'dark gray',
+                'selected_fg': 'white'
+            }
+        }
+        
+        style = theme_styles[theme]
+        
+        self.style.configure('.', background=style['background'], foreground=style['foreground'], fieldbackground=style['fieldbackground'])
+        self.style.configure('TLabel', background=style['background'], foreground=style['foreground'])
+        self.style.configure('TEntry', background=style['background'], foreground=style['foreground'])
+        self.style.configure('TButton', background=style['background'], foreground=style['foreground'])
+        self.style.configure('TOptionMenu', background=style['background'], foreground=style['foreground'])
+        self.style.configure('Treeview', background=style['background'], foreground=style['foreground'], fieldbackground=style['fieldbackground'])
+        self.style.map('Treeview', background=[('selected', style['selected_bg'])], foreground=[('selected', style['selected_fg'])])
 
 if __name__ == "__main__":
     root = tk.Tk()
