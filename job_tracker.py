@@ -14,82 +14,64 @@ class JobTrackerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Job Application Tracker")
-        self.style = ttk.Style(self.root)
-        self.current_theme = 'light'
         self.create_widgets()
         self.load_applications()
-        self.set_theme('light')
 
     def create_widgets(self):
-        # Define the layout
-        self.frame = ttk.Frame(self.root)
-        self.frame.pack(padx=10, pady=10, fill='x', expand=True)
+        frame = tk.Frame(self.root, padx=10, pady=10)
+        frame.pack(fill='x', expand=True)
 
-        self.date_label = ttk.Label(self.frame, text="Date:")
-        self.date_label.grid(row=0, column=0, padx=5, pady=5)
-        self.date_entry = DateEntry(self.frame, date_pattern='yyyy-mm-dd')
-        self.date_entry.grid(row=0, column=1, padx=5, pady=5)
+        # Labels and entry fields
+        self.create_label_entry(frame, "Date:", DateEntry, 0)
+        self.create_label_entry(frame, "Company:", ttk.Entry, 1)
+        self.create_label_entry(frame, "Position:", ttk.Entry, 2)
+        self.create_label_entry(frame, "Status:", ttk.Entry, 3)
 
-        self.company_label = ttk.Label(self.frame, text="Company:")
-        self.company_label.grid(row=1, column=0, padx=5, pady=5)
-        self.company_entry = ttk.Entry(self.frame)
-        self.company_entry.grid(row=1, column=1, padx=5, pady=5)
+        # Category dropdown
+        self.create_label_dropdown(frame, "Category:", ["Tech", "Blockchain", "AI"], 4)
 
-        self.position_label = ttk.Label(self.frame, text="Position:")
-        self.position_label.grid(row=2, column=0, padx=5, pady=5)
-        self.position_entry = ttk.Entry(self.frame)
-        self.position_entry.grid(row=2, column=1, padx=5, pady=5)
+        # Follow-Up Date
+        self.create_label_entry(frame, "Follow-Up Date (optional):", DateEntry, 5)
+        self.create_label_entry(frame, "Company Website:", ttk.Entry, 6)
 
-        self.status_label = ttk.Label(self.frame, text="Status:")
-        self.status_label.grid(row=3, column=0, padx=5, pady=5)
-        self.status_entry = ttk.Entry(self.frame)
-        self.status_entry.grid(row=3, column=1, padx=5, pady=5)
-
-        self.category_label = ttk.Label(self.frame, text="Category:")
-        self.category_label.grid(row=4, column=0, padx=5, pady=5)
-        self.category_var = tk.StringVar()
-        self.category_menu = ttk.OptionMenu(self.frame, self.category_var, "Tech", "Tech", "Blockchain", "AI")
-        self.category_menu.grid(row=4, column=1, padx=5, pady=5)
-
-        self.followup_label = ttk.Label(self.frame, text="Follow-Up Date (optional):")
-        self.followup_label.grid(row=5, column=0, padx=5, pady=5)
-        self.followup_entry = DateEntry(self.frame, date_pattern='yyyy-mm-dd')
-        self.followup_entry.grid(row=5, column=1, padx=5, pady=5)
-
-        self.website_label = ttk.Label(self.frame, text="Company Website:")
-        self.website_label.grid(row=6, column=0, padx=5, pady=5)
-        self.website_entry = ttk.Entry(self.frame)
-        self.website_entry.grid(row=6, column=1, padx=5, pady=5)
-
-        self.add_button = ttk.Button(self.frame, text="Add Application", command=self.add_application)
+        # Buttons
+        self.add_button = ttk.Button(frame, text="Add Application", command=self.add_application)
         self.add_button.grid(row=7, column=0, columnspan=2, pady=10)
 
-        self.switch_button = ttk.Button(self.frame, text="Switch to Dark Mode", command=self.toggle_theme)
-        self.switch_button.grid(row=8, column=0, columnspan=2, pady=10)
-
+        # Treeview for displaying applications
         self.tree = ttk.Treeview(self.root, columns=("Date", "Company", "Position", "Status", "Category", "Followed Up", "Company Website"), show='headings')
-        self.tree.heading("Date", text="Date")
-        self.tree.heading("Company", text="Company")
-        self.tree.heading("Position", text="Position")
-        self.tree.heading("Status", text="Status")
-        self.tree.heading("Category", text="Category")
-        self.tree.heading("Followed Up", text="Followed Up")
-        self.tree.heading("Company Website", text="Company Website")
-        self.tree.pack(padx=10, pady=10, fill='x', expand=True)
+        for col in self.tree["columns"]:
+            self.tree.heading(col, text=col)
+        self.tree.pack(fill='both', expand=True, padx=10, pady=10)
+
+    def create_label_entry(self, frame, text, widget_class, row):
+        label = ttk.Label(frame, text=text)
+        label.grid(row=row, column=0, sticky='e', pady=5)
+        entry = widget_class(frame)
+        entry.grid(row=row, column=1, sticky='ew', pady=5)
+        setattr(self, text.replace(" ", "_").lower(), entry)
+
+    def create_label_dropdown(self, frame, text, options, row):
+        label = ttk.Label(frame, text=text)
+        label.grid(row=row, column=0, sticky='e', pady=5)
+        var = tk.StringVar(value=options[0])
+        dropdown = ttk.OptionMenu(frame, var, options[0], *options)
+        dropdown.grid(row=row, column=1, sticky='ew', pady=5)
+        setattr(self, text.replace(" ", "_").lower(), var)
 
     def add_application(self):
-        date = self.date_entry.get()
-        company = self.company_entry.get()
-        position = self.position_entry.get()
-        status = self.status_entry.get()
-        category = self.category_var.get()
-        followup = self.followup_entry.get()
-        website = self.website_entry.get()
-
-        if date and company and position and status and category and website:
-            followup = followup if followup else "N/A"
-            new_data = pd.DataFrame([[date, company, position, status, category, followup, website]], 
-                                    columns=['Date', 'Company', 'Position', 'Status', 'Category', 'Followed Up', 'Company Website'])
+        data = {
+            "Date": self.date_.get(),
+            "Company": self.company_.get(),
+            "Position": self.position_.get(),
+            "Status": self.status_.get(),
+            "Category": self.category_.get(),
+            "Followed Up": self.follow-up_date_(optional).get(),
+            "Company Website": self.company_website_.get()
+        }
+        if all(data.values()) or not data["Followed Up"]:
+            data["Followed Up"] = data["Followed Up"] if data["Followed Up"] else "N/A"
+            new_data = pd.DataFrame([data])
             new_data.to_csv(file_name, mode='a', header=False, index=False)
             self.load_applications()
             self.clear_entries()
@@ -98,58 +80,17 @@ class JobTrackerApp:
             messagebox.showwarning("Warning", "Please fill in all fields except Follow-Up Date")
 
     def clear_entries(self):
-        self.date_entry.set_date('')
-        self.company_entry.delete(0, tk.END)
-        self.position_entry.delete(0, tk.END)
-        self.status_entry.delete(0, tk.END)
-        self.category_var.set("Tech")
-        self.followup_entry.set_date('')
-        self.website_entry.delete(0, tk.END)
+        for attr in ["date_", "company_", "position_", "status_", "company_website_"]:
+            getattr(self, attr).delete(0, tk.END)
+        self.category_.set("Tech")
+        self.follow-up_date_(optional).set_date('')
 
     def load_applications(self):
         for row in self.tree.get_children():
             self.tree.delete(row)
         df = pd.read_csv(file_name)
-        for index, row in df.iterrows():
-            self.tree.insert("", "end", values=(row["Date"], row["Company"], row["Position"], row["Status"], row["Category"], row["Followed Up"], row["Company Website"]))
-
-    def toggle_theme(self):
-        if self.current_theme == 'light':
-            self.set_theme('dark')
-            self.current_theme = 'dark'
-            self.switch_button.config(text="Switch to Light Mode")
-        else:
-            self.set_theme('light')
-            self.current_theme = 'light'
-            self.switch_button.config(text="Switch to Dark Mode")
-
-    def set_theme(self, theme):
-        theme_styles = {
-            'light': {
-                'background': '#f0f0f0',
-                'foreground': 'black',
-                'fieldbackground': '#f0f0f0',
-                'selected_bg': 'gray',
-                'selected_fg': 'white'
-            },
-            'dark': {
-                'background': 'black',
-                'foreground': 'white',
-                'fieldbackground': 'black',
-                'selected_bg': 'dark gray',
-                'selected_fg': 'white'
-            }
-        }
-        
-        style = theme_styles[theme]
-        
-        self.style.configure('.', background=style['background'], foreground=style['foreground'], fieldbackground=style['fieldbackground'])
-        self.style.configure('TLabel', background=style['background'], foreground=style['foreground'])
-        self.style.configure('TEntry', background=style['background'], foreground=style['foreground'])
-        self.style.configure('TButton', background=style['background'], foreground=style['foreground'])
-        self.style.configure('TOptionMenu', background=style['background'], foreground=style['foreground'])
-        self.style.configure('Treeview', background=style['background'], foreground=style['foreground'], fieldbackground=style['fieldbackground'])
-        self.style.map('Treeview', background=[('selected', style['selected_bg'])], foreground=[('selected', style['selected_fg'])])
+        for _, row in df.iterrows():
+            self.tree.insert("", "end", values=tuple(row))
 
 if __name__ == "__main__":
     root = tk.Tk()
