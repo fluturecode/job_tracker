@@ -22,17 +22,17 @@ class JobTrackerApp:
         frame.pack(fill='x', expand=True)
 
         # Labels and entry fields
-        self.create_label_entry(frame, "Date:", DateEntry, 0)
-        self.create_label_entry(frame, "Company:", ttk.Entry, 1)
-        self.create_label_entry(frame, "Position:", ttk.Entry, 2)
-        self.create_label_entry(frame, "Status:", ttk.Entry, 3)
+        self.create_label_entry(frame, "Date", DateEntry, 0)
+        self.create_label_entry(frame, "Company", ttk.Entry, 1)
+        self.create_label_entry(frame, "Position", ttk.Entry, 2)
+        self.create_label_entry(frame, "Status", ttk.Entry, 3)
 
         # Category dropdown
-        self.create_label_dropdown(frame, "Category:", ["Tech", "Blockchain", "AI"], 4)
+        self.create_label_dropdown(frame, "Category", ["Tech", "Blockchain", "AI"], 4)
 
         # Follow-Up Date
-        self.create_label_entry(frame, "Follow-Up Date (optional):", DateEntry, 5)
-        self.create_label_entry(frame, "Company Website:", ttk.Entry, 6)
+        self.create_label_entry(frame, "Follow_Up_Date", DateEntry, 5)
+        self.create_label_entry(frame, "Company_Website", ttk.Entry, 6)
 
         # Buttons
         self.add_button = ttk.Button(frame, text="Add Application", command=self.add_application)
@@ -45,32 +45,31 @@ class JobTrackerApp:
         self.tree.pack(fill='both', expand=True, padx=10, pady=10)
 
     def create_label_entry(self, frame, text, widget_class, row):
-        label = ttk.Label(frame, text=text)
+        label = ttk.Label(frame, text=f"{text}:")
         label.grid(row=row, column=0, sticky='e', pady=5)
         entry = widget_class(frame)
         entry.grid(row=row, column=1, sticky='ew', pady=5)
-        setattr(self, text.replace(" ", "_").lower(), entry)
+        setattr(self, text.lower(), entry)
 
     def create_label_dropdown(self, frame, text, options, row):
-        label = ttk.Label(frame, text=text)
+        label = ttk.Label(frame, text=f"{text}:")
         label.grid(row=row, column=0, sticky='e', pady=5)
         var = tk.StringVar(value=options[0])
         dropdown = ttk.OptionMenu(frame, var, options[0], *options)
         dropdown.grid(row=row, column=1, sticky='ew', pady=5)
-        setattr(self, text.replace(" ", "_").lower(), var)
+        setattr(self, text.lower(), var)
 
     def add_application(self):
         data = {
-            "Date": self.date_.get(),
-            "Company": self.company_.get(),
-            "Position": self.position_.get(),
-            "Status": self.status_.get(),
-            "Category": self.category_.get(),
-            "Followed Up": self.follow-up_date_(optional).get(),
-            "Company Website": self.company_website_.get()
+            "Date": self.date.get_date().strftime("%Y-%m-%d"),
+            "Company": self.company.get(),
+            "Position": self.position.get(),
+            "Status": self.status.get(),
+            "Category": self.category.get(),
+            "Followed Up": self.follow_up_date.get_date().strftime("%Y-%m-%d") if self.follow_up_date.get_date() else "N/A",
+            "Company Website": self.company_website.get()
         }
-        if all(data.values()) or not data["Followed Up"]:
-            data["Followed Up"] = data["Followed Up"] if data["Followed Up"] else "N/A"
+        if all(value for key, value in data.items() if key != "Followed Up"):
             new_data = pd.DataFrame([data])
             new_data.to_csv(file_name, mode='a', header=False, index=False)
             self.load_applications()
@@ -80,10 +79,11 @@ class JobTrackerApp:
             messagebox.showwarning("Warning", "Please fill in all fields except Follow-Up Date")
 
     def clear_entries(self):
-        for attr in ["date_", "company_", "position_", "status_", "company_website_"]:
+        for attr in ["company", "position", "status", "company_website"]:
             getattr(self, attr).delete(0, tk.END)
-        self.category_.set("Tech")
-        self.follow-up_date_(optional).set_date('')
+        self.date.set_date(None)
+        self.category.set("Tech")
+        self.follow_up_date.set_date(None)
 
     def load_applications(self):
         for row in self.tree.get_children():
